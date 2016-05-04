@@ -1,62 +1,114 @@
-#include <iostream>
+#include<iostream>
+#include<cstring>
 using namespace std;
-int dd[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
 
-class Date
-{
-public:
-	Date(int y = 2000, int m = 1, int d = 1) throw(out_of_range);
-	void init(int y, int m, int d) throw(out_of_range);
-	void show();
-	int isleapYear(int y);
-private:
-	int month;
-	int day;
-	int year;
+class Date {
+	public:
+		Date(int m = 1, int d = 1, int y = 1900);	//构造函数
+		Date &operator ++ ();						//重载前置++
+		Date &operator ++ (int);						//重载后置++
+		bool leapYear(int);							//闰年 
+		bool endOfMonth(int);						//是否是月末
+		void print() const;
+		void helpIncreament();						//日期合理增加一
+	private:
+		int month;
+		int day;
+		int year;
+		static const int days[]; 					//每月的天数
 };
 
-Date::Date(int y, int m, int d) throw(out_of_range)
-{
-	init(y, m, d);
+const int Date::days[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};	//每月天数
+Date::Date(int m, int d, int y) {
+	//设置年月合理值 
+	month = (m >= 1 && m <= 12)? m : 1;
+	year = (y >= 1900 && y <= 2100)? y : 1900; 
+	//设置日期合理值
+	if(month == 2 && leapYear(year))
+		day = (d >= 1 && d <= 29)? d : 1;
+	else
+		day = (d >= 1 && d <= days[month])? d : 1; 
 }
 
-void Date::init(int y, int m, int d) throw(out_of_range)
+bool Date::leapYear(int y)
 {
-	if(y>5000 || y<1 || m<1 || m>12 || d<1 || d>dd[m-1])
-	{
-		throw out_of_range("设置的日期有误");
-	} else if(!isleapYear(y) && d == 29)
-	{
-		throw out_of_range("设置日期有误");
-	} else
-	{
-		year = y;
-		month = m;
-		day = d;
+	if(y % 400 == 0 || (y % 100 != 0 && y % 4 == 0))
+		return true;
+	else
+		return false;
+}
+
+/*重载自增运算符*/
+Date &Date::operator ++ () {
+	helpIncreament();		//日期合理增加一
+	return *this; 
+}
+Date &Date::operator ++(int) {
+	Date temp = *this;
+	helpIncreament();		//按值返回历史对象 
+	return temp;
+}
+
+bool Date::endOfMonth(int d)
+{
+	if(month == 2 && leapYear(year))
+		return d == 29;
+	else
+		return d == days[month];
+}
+
+void Date::helpIncreament()
+{
+	if(endOfMonth(day) && month == 12) {
+		day = 1;
+		month = 1;
+		++year;
 	}
+	else if(endOfMonth(day)) {
+		day = 1;
+		++month;
+	}
+	else
+		++day;
 }
 
-void Date::show()
-{
-	cout << month << '/' << day << '/' << year << endl;
+void Date::print() const {
+	char * monthName[13] = {
+		" ",
+		"Jan",
+		"Feb",
+		"Mar",
+		"Apr",
+		"May",
+		"June",
+		"July",
+		"Aug",
+		"Sep",
+		"Oct",
+		"Nov",
+		"Dec"
+	};
+	cout << monthName[month] << " " << day << " " << year << endl;
 }
-
-int Date::isleapYear(int y)
-{
-	return (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0);
-}
-
 int main()
 {
-	try
-	{
-		Date d1(2003, 12, 6);
-		d1.show();
-		Date d2(2011, 2, 29);
-		d2.show();
-	} catch(out_of_range ex)
-	{
-		cout << ex.what() << endl;
-	}
+	Date d0, d1(12, 31, 2011);
+//	测试前置自增运算符
+	d0 = ++d1;
+	cout << "d0 = ++d1 \n";
+	cout << "d0: ";
+	d0.print();
+	cout << "d1: ";
+	d1.print();
+//	测试后置自增运算符
+	Date d2(2, 28, 2012);
+	d0 = d2++;
+	cout << "d0 = d2++ \n";
+	cout << "d0: ";
+	d0.print();
+	cout << "d2: ";
+	d2.print(); 
+	system("pause");
+//	system("error");
 	return 0;
 }
